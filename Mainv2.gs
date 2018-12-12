@@ -1,9 +1,4 @@
-//TODO
-//Deactivating/TOS is a resolution 
 
-
-
-Logger.clear();
 Logger.clear();
 var ssMaster = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1t8-D-SWfitVeDc3hrfBlMhIZ4HYnjnSWaE68VCKDN1c/edit');
 var resourcesSheet = ssMaster.getSheetByName('Resources');
