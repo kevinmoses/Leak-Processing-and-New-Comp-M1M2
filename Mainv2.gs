@@ -34,6 +34,7 @@ var activeRow = [
 addSpacesToArray();
 
 function master() {
+
 	loopThruUnits(99);
 	var noOfRows = activeRow.length;
 	var noOfCols = activeRow[0].length;
@@ -64,7 +65,6 @@ function findFirstAttempt(repairArray) {
 				var eventTag = repairArray[k][0];
 				var eventName = repairArray[k][2];
 				var eventDate = repairArray[k][3];
-				//if(eventTag == currentTag && eventDate >= currentTime && eventName=="Repair Attempt" || eventName=="Repair Attempt" ){
 				if (eventTag == currentTag && eventDate >= currentTime) {
 					leaksSheet.getRange(j + 1, 5).setValue(eventDate);
 					calcDaystoFirstAttempt(currentTime, eventDate, j + 1, 7);
@@ -77,6 +77,7 @@ function findFirstAttempt(repairArray) {
 
 
 function fetchValue(sheet, labelCol, dataCol, searchTerm) {
+
 	//assumes label comes before data in column order
 	var lastRow = sheet.getLastRow();
 	var lastCol = sheet.getLastColumn();
@@ -94,6 +95,7 @@ function fetchValue(sheet, labelCol, dataCol, searchTerm) {
 }
 
 function getSheet(ssName, sheetName) {
+
 	var URL = fetchValue(resourcesSheet, 2, 5, ssName);
 	URL = URL.toString().replace("?usp=drivesdk", "");
 	var ss = SpreadsheetApp.openByUrl(URL);
@@ -102,6 +104,7 @@ function getSheet(ssName, sheetName) {
 }
 
 function getAllSheets(ssName) {
+
 	var URL = fetchValue(resourcesSheet, 2, 5, ssName);
 	URL = URL.toString().replace("?usp=drivesdk", "");
 	var ss = SpreadsheetApp.openByUrl(URL);
@@ -110,6 +113,7 @@ function getAllSheets(ssName) {
 }
 
 function getSheetIndex(ssName, sheetIndex) {
+
 	var URL = fetchValue(resourcesSheet, 2, 5, ssName);
 	URL = URL.toString().replace("?usp=drivesdk", "");
 	var ss = SpreadsheetApp.openByUrl(URL);
@@ -118,6 +122,7 @@ function getSheetIndex(ssName, sheetIndex) {
 }
 
 function loopThruUnits(limit) {
+
 	leaksSheet.clear();
 	leaksSheet.clearFormats();
 	var lastRowResources = resourcesSheet.getLastRow();
@@ -153,6 +158,7 @@ function loopThruUnits(limit) {
 }
 
 function runTechSpeed() {
+
 	//loopThruUnitsTechSpeed(0,42 ); Timed out if I tried to run as one group
 	loopThruUnitsTechSpeed(42, 99);
 }
@@ -194,6 +200,7 @@ function loopThruUnitsTechSpeed(start, limit) {
 
 
 function findLeaks(data, lastRowIndex) {
+
 	//find leaks    
 	for (k = 0; k <= lastRowIndex; k++) {
 
@@ -249,6 +256,7 @@ function calcDaystoFirstAttempt(leakDate, attDate, row, column) {
 
 
 function setupRepairs() {
+
 	repairSheet.setFrozenRows(1);
 	repairSheet.sort(repInspectionDateCol, false);
 	var lastRow = repairSheet.getLastRow();
@@ -259,6 +267,7 @@ function setupRepairs() {
 
 
 function colLabels() {
+
 	if (leaksSheet.getRange(1, 1).getValue() != 'Leak Tag Number') {
 		leaksSheet.insertRowBefore(1);
 		leaksSheet.getRange(1, 1).setValue("Leaking Tag Number");
@@ -334,6 +343,7 @@ function findNextMonthInspection(data, lastRepairTime, currentTag, currentTime, 
 }
 
 function calcM1M2Dates(data, lastRepairTime, lastRowIndex, intervalMonth, writeToCol) {
+
 	var month;
 	var year;
 	var dueDate = new Date();
@@ -350,18 +360,21 @@ function calcM1M2Dates(data, lastRepairTime, lastRowIndex, intervalMonth, writeT
 }
 
 function outputArray() {
+
 	activeRow.push([
 		[]
 	]);
 }
 
 function addSpacesToArray() {
+
 	for (t = 0; t <= 24; t++) {
 		activeRow[r][t] = ' ';
 	}
 }
 
 function calcDaysToFixed() {
+
 	var fixedDate = activeRow[r][8];
 	var leakDate = activeRow[r][1];
 
@@ -375,6 +388,7 @@ function calcDaysToFixed() {
 }
 
 function calcM1M2DatesNewComp(dateCol, intervalMonth, writeToCol, countCurrentMonth, resetDays) {
+
 	var month;
 	var year;
 	var day;
@@ -450,6 +464,7 @@ function calcM1M2DatesNewComp(dateCol, intervalMonth, writeToCol, countCurrentMo
 }
 
 function m1m3NewCompsMethod1() {
+
 	calcM1M2DatesNewComp(5, 1, 7, 'Yes', '0');
 	calcM1M2DatesNewComp(5, 1, 9, 'No', '1');
 }
@@ -474,6 +489,7 @@ function removeDuplicatesAndSaveTechs(data, newData) {
 }
 
 function getTechList() {
+
 	var maxRow = techsSheet.getLastRow();
 	var maxCol = techsSheet.getLastColumn();
 	return techsSheet.getRange(1, 1, maxRow, maxCol).getValues();
@@ -497,6 +513,7 @@ function writePaceFailures(unit) {
 }
 
 function ifNotDone(functionName, functionRow) {
+
 	if (functionArray[functionRow] != '1') {
 		functionName;
 		functionArray[functionRow] = '1';
@@ -507,6 +524,7 @@ function ifNotDone(functionName, functionRow) {
 }
 
 function techSpeedv3(data, unitName, timeWindow, failValue1, outputColumn, failValue2) {
+	
 	var unitDate;
 	var unitTech;
 	var currentTech;
