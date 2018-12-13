@@ -1,20 +1,11 @@
-
-Logger.clear();
 var ssMaster = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1t8-D-SWfitVeDc3hrfBlMhIZ4HYnjnSWaE68VCKDN1c/edit');
 var resourcesSheet = ssMaster.getSheetByName('Resources');
 var paramsSheet = ssMaster.getSheetByName('Params');
-
 var leaksSheet = ssMaster.getSheetByName('Leakers');
-
 var repairSheet = getSheet("Repairs", "Sheet1");
-
 var newCompsSheet = getSheet("Activated Components", "Sheet1");
-
 var techsSheet = ssMaster.getSheetByName('techs');
 var functionSheet = ssMaster.getSheetByName('functionsCompleted');
-
-//input Setup
-
 
 //Units Sheets
 var inspUnitCol = 1;
@@ -34,73 +25,22 @@ var failures = [
 	["nan", "", "", "", "", "", "", ""]
 ];
 
-
 //variable Setup
 var leakDef = fetchValue(paramsSheet, 1, 2, 'Leak Definition');
-
 var r = 0;
 var activeRow = [
 	[]
 ];
 addSpacesToArray();
 
-
 function master() {
-	//loopThruUnits(99);
-	//var noOfRows = activeRow.length;
-	//var noOfCols = activeRow[0].length;
-	//leaksSheet.getRange(2, 1, noOfRows, noOfCols).setValues(activeRow);
-
+	loopThruUnits(99);
+	var noOfRows = activeRow.length;
+	var noOfCols = activeRow[0].length;
+	leaksSheet.getRange(2, 1, noOfRows, noOfCols).setValues(activeRow);
 	findFirstAttempt(setupRepairs());
 	colLabels();
-
-
-	//need to format columns
 	SpreadsheetApp.getActiveSpreadsheet().toast('Done', 'Status', -1);
-
-}
-
-function setFilter() {
-
-	var filterSettings = {};
-
-	// The range of data on which you want to apply the filter.
-	// optional arguments: startRowIndex, startColumnIndex, endRowIndex, endColumnIndex
-	filterSettings.range = {
-		sheetId: ssMaster.getSheetByName('Leakers').getSheetId()
-	};
-
-	// Criteria for showing/hiding rows in a filter
-	// https://developers.google.com/sheets/api/reference/rest/v4/FilterCriteria
-	filterSettings.criteria = {};
-	var columnIndex = 5;
-	filterSettings['criteria'][columnIndex] = {
-		'hiddenValues': [""]
-	};
-
-	var request = {
-		"setBasicFilter": {
-			"filter": filterSettings
-		}
-	};
-	Sheets.Spreadsheets.batchUpdate({
-		'requests': [request]
-	}, ssMaster.getId());
-}
-
-//MAke this work
-function clearFilter() {
-	var ss = SpreadsheetApp.getActiveSpreadsheet();
-	var ssId = ss.getId();
-	var sheetId = ss.getActiveSheet().getSheetId();
-	var requests = [{
-		"clearBasicFilter": {
-			"sheetId": sheetId
-		}
-	}];
-	Sheets.Spreadsheets.batchUpdate({
-		'requests': requests
-	}, ssId);
 }
 
 function findFirstAttempt(repairArray) {
@@ -207,18 +147,14 @@ function loopThruUnits(limit) {
 				var unitData = unitRange.getValues();
 				SpreadsheetApp.getActiveSpreadsheet().toast(i.toString() + ' of ' + lastRowResources.toString() + '.  ' + unit.toString() + '.  Sheet:' + unitSheet.getSheetName().toString(), 'Checking Units for Leakers', -1);
 				findLeaks(unitData, lastRowUnit - 1);
-				//techList = removeDuplicatesAndSaveTechs(unitData, techList);
-				//techSpeed(unitData, unitSheet, 1 , 100, 11);
-				//techSpeed(unitData, unitSheet, 24 , 500, 12);
-
 			}
 		}
 	}
 }
 
 function runTechSpeed() {
-	loopThruUnitsTechSpeed(42,99 );
-   
+	//loopThruUnitsTechSpeed(0,42 ); Timed out if I tried to run as one group
+	loopThruUnitsTechSpeed(42, 99);
 }
 
 function loopThruUnitsTechSpeed(start, limit) {
@@ -238,27 +174,22 @@ function loopThruUnitsTechSpeed(start, limit) {
 		var allsheets = getAllSheets(unit);
 		for (var s in allsheets) {
 			var unitSheet = allsheets[s];
-
 			var checkFileValue = unitSheet.getRange(1, inspTestTypeCol).getValue();
 
 			if (checkFileValue == 'TestType') {
 				unitSheet.setFrozenRows(1);
-				unitSheet.sort(inspDateCol,true);
+				unitSheet.sort(inspDateCol, true);
 				var lastRowUnit = unitSheet.getLastRow();
 				var unitRange = unitSheet.getRange(2, 5, lastRowUnit, 8);
 				unitSheet.insertColumns(9, 2);
 				var unitData = unitRange.getValues();
-				SpreadsheetApp.getActiveSpreadsheet().toast(i.toString() + ' of ' + lastRowResources.toString() + '.  ' + unit.toString() + '.  Sheet:', unitSheet.getSheetId().toString() +' Checking Units for TechSpeed', -1);
-				//findLeaks(unitData, lastRowUnit-1);
-				//techList = removeDuplicatesAndSaveTechs(unitData, techList);
-
+				SpreadsheetApp.getActiveSpreadsheet().toast(i.toString() + ' of ' + lastRowResources.toString() + '.  ' + unit.toString() + '.  Sheet:', unitSheet.getSheetId().toString() + ' Checking Units for TechSpeed', -1);
+				techList = removeDuplicatesAndSaveTechs(unitData, techList);
 				techSpeedv3(unitData, unit, 1, 200, 5, 500);
-				
-
 			}
 		}
 	}
-	
+
 }
 
 
@@ -286,9 +217,7 @@ function findLeaks(data, lastRowIndex) {
 
 					if (unitPPM <= leakDef) {
 						activeRow[r][5] = 'newleak';
-
 						findNextPassingPpm(data, currentTag, currentTime, currentPPM, lastRowIndex);
-
 					}
 
 					if (currentPPM < leakDef) {
@@ -365,19 +294,13 @@ function findNextPassingPpm(data, currentTag, currentTime, currentPPM, lastRowIn
 			var unitDate = data[m - 1][inspDateCol - 1];
 			var unitPPM = data[m - 1][inspPPMcol - 1];
 
-
 			if (currentTag == unitTag && currentTime <= unitDate) {
 				activeRow[r][7] = unitPPM;
 				activeRow[r][8] = unitDate;
-
-
 				calcM1M2Dates(data, unitDate, lastRowIndex, 1, 11);
 				calcM1M2Dates(data, unitDate, lastRowIndex, 2, 15);
 				findNextMonthInspection(data, unitDate, currentTag, currentTime, currentPPM, lastRowIndex, 11);
 				findNextMonthInspection(data, unitDate, currentTag, currentTime, currentPPM, lastRowIndex, 15);
-
-
-
 				m = lastRowIndex;
 			}
 		}
@@ -386,9 +309,7 @@ function findNextPassingPpm(data, currentTag, currentTime, currentPPM, lastRowIn
 
 function findNextMonthInspection(data, lastRepairTime, currentTag, currentTime, currentPPM, lastRowIndex, writeToCol) {
 
-
 	var dueDate = new Date(activeRow[r][writeToCol + 1]);
-	//var dueDate = new Date(leaksSheet.getRange(3, writeToCol+2).getValue());
 	var tooSoon = new Date(dueDate);
 	var month = tooSoon.getMonth();
 	month = month - 1;
@@ -400,23 +321,15 @@ function findNextMonthInspection(data, lastRepairTime, currentTag, currentTime, 
 		var unitDate = data[p - 1][inspDateCol - 1];
 		var unitPPM = data[p - 1][inspPPMcol - 1];
 
-		// if(currentTag== unitTag && lastRepairTime < unitDate && unitDate>= tooSoon && currentPPM>=500 && unitDate <= dueDate){
 		if (currentTag == unitTag && unitDate >= tooSoon && unitDate <= dueDate) {
-			//leaks.getRange(2, writeToCol).setValue(unitPpm);
 			activeRow[r][writeToCol - 1] = unitPPM;
-			//leaks.getRange(2, writeToCol).setNumberFormat("#");
-
-			//leaks.getRange(2, writeToCol+1).setValue(unitDate);
 			activeRow[r][writeToCol] = unitDate;
 			p = 0;
 
 			if (unitDate > dueDate) {
-				// leaks.getRange(l, writeToCol+3).setValue(unitDate);
-				//leaks.getRange(l, writeToCol+3).setValue('early/late M').setBackground('red');
 				activeRow[r][writeToCol + 2] = 'early/late M';
 			}
 		}
-
 	}
 }
 
@@ -432,44 +345,25 @@ function calcM1M2Dates(data, lastRepairTime, lastRowIndex, intervalMonth, writeT
 		dueDate.setYear(year);
 		dueDate.setMonth(month);
 		dueDate.setDate(1);
-		activeRow[r][writeToCol + 1] = dueDate
-
-
-
+		activeRow[r][writeToCol + 1] = dueDate;
 	}
-
-
 }
 
 function outputArray() {
-
-
 	activeRow.push([
 		[]
 	]);
-
-
-
 }
 
 function addSpacesToArray() {
-
-
-
 	for (t = 0; t <= 24; t++) {
 		activeRow[r][t] = ' ';
-
 	}
-
-
-
 }
 
 function calcDaysToFixed() {
 	var fixedDate = activeRow[r][8];
 	var leakDate = activeRow[r][1];
-
-
 
 	if (fixedDate != "" && leakDate != "" && activeRow[r][5] == 'newleak') {
 		var diff = fixedDate - leakDate;
@@ -477,7 +371,6 @@ function calcDaysToFixed() {
 		if (diffToDays >= 0) {
 			activeRow[r][9] = diffToDays;
 		}
-		//leaks.getRange(n,10).setValue(diffToDays).setNumberFormat("#.#");
 	}
 }
 
@@ -491,12 +384,12 @@ function calcM1M2DatesNewComp(dateCol, intervalMonth, writeToCol, countCurrentMo
 
 	for (z in allSheetsNewComp) {
 
-
 		var newCompRange = allSheetsNewComp[z].getRange(1, 1, allSheetsNewComp[z].getMaxRows(), allSheetsNewComp[z].getMaxColumns());
 		var newCompArray = newCompRange.getValues();
 		var maxRow = newCompArray.length;
 
 		for (q = maxRow; q > 1; q--) {
+
 			if (newCompArray[q - 1][dateCol - 1] != '') {
 
 				var dateStartNew = new Date(newCompArray[q - 1][5]);
@@ -523,8 +416,6 @@ function calcM1M2DatesNewComp(dateCol, intervalMonth, writeToCol, countCurrentMo
 				dateNext.setYear(year);
 				dateNext.setDate(1);
 				dateNext.setMonth(monthNext);
-
-
 				newCompArray[q - 1][writeToCol - 1] = dateNext;
 				var newCompTag = newCompArray[q - 1][4];
 				var newCompUnit = newCompArray[q - 1][3];
@@ -541,27 +432,18 @@ function calcM1M2DatesNewComp(dateCol, intervalMonth, writeToCol, countCurrentMo
 					var unitTag = unitSearchValues[w][1];
 					var unitDate = unitSearchValues[w][4];
 
-
-
 					if (newCompTag == unitTag && unitDate < dateNext && unitDate > dateStart) {
 						var newFoundInsp = unitTag;
 						newCompArray[q - 1][writeToCol] = unitDate;
 						w = unitSearchValues.length;
 					}
-
-
 				}
 				lastUnit = newCompUnit;
-
-
 			}
 		}
-
-
 		maxRow = newCompArray.length;
 		var maxCol = newCompArray[0].length;
 		allSheetsNewComp[z].getRange(1, 1, maxRow, maxCol).setValues(newCompArray);
-
 	}
 	allSheetsNewComp[z].getRange(1, writeToCol).setValue("dueDate");
 	allSheetsNewComp[z].getRange(1, writeToCol + 1).setValue("Found Inspection");
@@ -572,14 +454,7 @@ function m1m3NewCompsMethod1() {
 	calcM1M2DatesNewComp(5, 1, 9, 'No', '1');
 }
 
-function m1m3NewCompsMethod2() {
-	calcM1M2DatesNewComp(5, 0, 7, 'Yes', '0');
-	calcM1M2DatesNewComp(5, 0, 9, 'No', '1');
-}
-
 function removeDuplicatesAndSaveTechs(data, newData) {
-
-
 
 	for (tt in data) {
 		var row = data[tt];
@@ -605,109 +480,33 @@ function getTechList() {
 }
 
 
-function techSpeed(data, unitSheet, timeWindow, failValue1, outputColumn, failValue2) {
-
-	var unitDate;
-	var unitTech;
-	var currentTech;
-	var currentTagTime;
-	var unitSearchValues = data;
-	var techSearchValues = techList;
-	var numberOfHours = 1;
-	//COLUMNS 	
-	var techCol = 4;
-	var timeCol = 1;
-
-for (runTwice = 0; runTwice <= 1;){
-	runTwice++;
-	if (runTwice == 2){
-		var failValue = failValue2;
-		outputColumn++;
-        timeWindow= 24;
-	}else{
-		var failValue = failValue1;
-	}
- 	 
-	//loop thru Techs
-	for (kk in techSearchValues) {
-		var focusTech = techSearchValues[kk][7];
-
-		//loop thru inspections looking for tech matches
-		for (jj in unitSearchValues) {
-			var numOfInsp = 1;
-
-			currentTech = unitSearchValues[jj][techCol - 1];
-			if (currentTech != '') {
-
-
-				//we found a match 
-				if (currentTech == focusTech) {
-
-					//Start where we left off last time
-					for (ii = jj; ii < unitSearchValues.length - 1;) {
-						currentTagTime = unitSearchValues[jj][timeCol - 1];
-						var oneXLater = new Date(currentTagTime.getTime() + (60 * 1000 * 60 * timeWindow));
-						ii++;
-						unitTech = unitSearchValues[ii][techCol - 1];
-						unitDate = unitSearchValues[ii][timeCol - 1];
-						//Check that he next row is still the same tech
-						if (focusTech === unitTech && unitDate < oneXLater && unitDate > currentTagTime) {
-							numOfInsp = numOfInsp + 1;
-						}
-						if (unitDate > oneXLater) {
-							ii = unitSearchValues.length + 10;
-
-							if (numOfInsp > failValue) {
-
-
-								failures.push(unitSearchValues[jj]);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-}
 
 function writePaceFailures(unit) {
 
-	//var unitSearchnumRows= unitSearchValues.length;
-	//var unitSearchCol= unitSearchValues[0].length;
-	//var sheetRange= unitSheet.getRange(2, 1, unitSearchnumRows, unitSearchCol);
-	//sheetRange.setValues(unitSearchValues);
-  failures[0][0]= unit;
+	failures[0][0] = unit;
 	var failuresRow = failures.length;
 	var failuresCol = failures[0].length;
 	var failuresSheet = ssMaster.getSheetByName('PaceFailures');
 	failuresSheet.insertRows(1, failuresRow);
 	var failuresRange = failuresSheet.getRange(1, 1, failuresRow, failuresCol);
-
 	failuresRange.setValues(failures);
-  failures = [
-	["nan", "", "", "", "", "", "", ""]
-];
+	failures = [
+		["nan", "", "", "", "", "", "", ""]
+	];
 
 }
 
-function ifNotDone(functionName, functionRow){
-	if (functionArray[functionRow] != '1'){
+function ifNotDone(functionName, functionRow) {
+	if (functionArray[functionRow] != '1') {
 		functionName;
-		functionArray[functionRow]= '1';
-		//functionArrayRow = functionArray.length;
+		functionArray[functionRow] = '1';
 
-	var functionRange = functionSheet.getRange(functionRow+1, 1, 1, 1);
-	functionRange.setValues(functionArray[functionRow]);
+		var functionRange = functionSheet.getRange(functionRow + 1, 1, 1, 1);
+		functionRange.setValues(functionArray[functionRow]);
 	}
 }
 
-function getFunctionArray(){
-
-}
-
-function techSpeedv2(data, unitSheet, timeWindow, failValue1, outputColumn, failValue2) {
-
+function techSpeedv3(data, unitName, timeWindow, failValue1, outputColumn, failValue2) {
 	var unitDate;
 	var unitTech;
 	var currentTech;
@@ -719,130 +518,72 @@ function techSpeedv2(data, unitSheet, timeWindow, failValue1, outputColumn, fail
 	var techCol = 4;
 	var timeCol = 1;
 
-for (runTwice = 0; runTwice <= 1;){
-	runTwice++;
-	if (runTwice == 2){
-		var failValue = failValue2;
-		outputColumn++;
-        timeWindow= 24;
-	}else{
-		var failValue = failValue1;
-	}
- 	 
-	//loop thru Techs
+	for (runTwice = 0; runTwice <= 1;) {
+		runTwice++;
+		if (runTwice == 2) {
+			var failValue = failValue2;
+			outputColumn++;
+			timeWindow = 24;
+		} else {
+			var failValue = failValue1;
+		}
 
-		
-		//var techsInspections = unitSearchValues.filter(function(item){return ;});
+		//loop thru Techs
+		for (kk in techSearchValues) {
 
-		//loop thru inspections looking for tech matches
-		for (jj in unitSearchValues) {
-			var focusTech = unitSearchValues[jj][7];
-			var numOfInsp = 1;
-          var numberOfInspByTech = unitSearchValues.length;
-			if  (unitSearchValues.length > 1){
+			var focusTech = techSearchValues[kk][7];
+			var techsInspections = unitSearchValues.filter(function(item) {
+				if (item[techCol - 1] == focusTech) {
+					return true;
 
-						currentTagTime = unitSearchValues[jj][timeCol - 1];
-						var oneXLater = new Date(currentTagTime.getTime() + (60 * 1000 * 60 * timeWindow));
-						//unitTech = unitSearchValues[jj+1][techCol - 1];
-						//unitDate = unitSearchValues[jj+][timeCol - 1];
-						//Check that he next row is still the same tech
+				}
+				return false;
+			});
 
-						var meetsWindow = unitSearchValues.filter(function(item){
-							if (item[timeCol-1] < oneXLater && item[timeCol-1]  > currentTagTime && item[techCol-1] == focusTech)
-							{
-								return true;
+			//loop thru inspections looking for tech matches
+			for (jj in techsInspections) {
+				var numOfInsp = 1;
 
-							} 
-							return false;
-						});
-							numOfInsp = meetsWindow.length;
-
-							if (numOfInsp > failValue) {
+				currentTech = techsInspections[jj][techCol - 1];
+				if (currentTech != '') {
 
 
-								failures.push(unitSearchValues[jj]);
+					//we found a match 
+					if (currentTech == focusTech) {
+
+						//Start where we left off last time
+						for (ii = jj; ii < techsInspections.length - 1;) {
+							currentTagTime = techsInspections[jj][timeCol - 1];
+							var oneXLater = new Date(currentTagTime.getTime() + (60 * 1000 * 60 * timeWindow));
+							ii++;
+							unitTech = techsInspections[ii][techCol - 1];
+							unitDate = techsInspections[ii][timeCol - 1];
+							//Check that he next row is still the same tech
+							if (focusTech === unitTech && unitDate < oneXLater && unitDate > currentTagTime) {
+								numOfInsp = numOfInsp + 1;
+							}
+							if (unitDate > oneXLater) {
+								ii = techsInspections.length + 10;
+
+								if (numOfInsp > failValue) {
+
+									failures.push(techsInspections[jj]);
+									lastRowOfFailures = failures.length;
+									failures[lastRowOfFailures - 1][outputColumn - 1] = numOfInsp;
+									failures[lastRowOfFailures - 1][1] = unitName;
+
+
+								} else {
+									Logger.log(focusTech + ' had ' + numOfInsp + ' on line ' + jj);
+
+
+								}
 							}
 						}
 					}
 				}
 			}
-			function techSpeedv3(data, unitName, timeWindow, failValue1, outputColumn, failValue2) {
-	var unitDate;
-	var unitTech;
-	var currentTech;
-	var currentTagTime;
-	var unitSearchValues = data;
-	var techSearchValues = techList;
-	var numberOfHours = 1;
-	//COLUMNS 	
-	var techCol = 4;
-	var timeCol = 1;
-
-for (runTwice = 0; runTwice <= 1;){
-	runTwice++;
-	if (runTwice == 2){
-		var failValue = failValue2;
-		outputColumn++;
-        timeWindow= 24;
-	}else{
-		var failValue = failValue1;
-	}
- 	 
-	//loop thru Techs
-	for (kk in techSearchValues) {
-
-		var focusTech = techSearchValues[kk][7];
-								var techsInspections = unitSearchValues.filter(function(item){
-							if (item[techCol-1] == focusTech)
-							{
-								return true;
-
-							} 
-							return false;
-						});
-
-		//loop thru inspections looking for tech matches
-		for (jj in techsInspections) {
-			var numOfInsp = 1;
-
-			currentTech = techsInspections[jj][techCol - 1];
-			if (currentTech != '') {
-
-
-				//we found a match 
-				if (currentTech == focusTech) {
-
-					//Start where we left off last time
-					for (ii = jj; ii < techsInspections.length - 1;) {
-						currentTagTime = techsInspections[jj][timeCol - 1];
-						var oneXLater = new Date(currentTagTime.getTime() + (60 * 1000 * 60 * timeWindow));
-						ii++;
-						unitTech = techsInspections[ii][techCol - 1];
-						unitDate = techsInspections[ii][timeCol - 1];
-						//Check that he next row is still the same tech
-						if (focusTech === unitTech && unitDate < oneXLater && unitDate > currentTagTime) {
-							numOfInsp = numOfInsp + 1;
-						}
-						if (unitDate > oneXLater) {
-							ii = techsInspections.length + 10;
-
-							if (numOfInsp > failValue) {
-
-failures.push(techsInspections[jj]);
-                              lastRowOfFailures = failures.length;
-								failures[lastRowOfFailures-1][outputColumn-1] = numOfInsp;
-                              failures[lastRowOfFailures-1][1] = unitName;
-								
-
-                            }else{ Logger.log(focusTech + ' had ' + numOfInsp + ' on line ' + jj);  
-			
-                              
-						}
-					}
-				}
-			}
 		}
+		writePaceFailures(unitName);
 	}
-}writePaceFailures(unitName);
-}
 }
